@@ -99,8 +99,13 @@ def get_chara_from_str(string):
     return bestname
 
 
-
 def get_move_data(character, move):
+    og = move
+    index = None
+    if "(" in move:
+        index = move[-3::]  
+        move = move[:-3]
+    
     character = get_chara_from_str(character)
     if character=="Nagoriyuki" and move in ["f.S", "c.S", "2S", "2H", "5H", "6H", "f.SS", "f.SSS"]:
         lvl = input("Indiquer le niveau de Blood Rage (1/2/3/BR) : ")
@@ -111,9 +116,10 @@ def get_move_data(character, move):
     response = requests.get(url)
     data = response.json()
     move = [entry["title"] for entry in data["cargoquery"] if entry["title"]["input"]==move][0]
-    return move
+    return og, move, index
 
-def get_move_img_from_data(movedata):
+def get_move_img_from_data(chara, move, movedata, index):
+    i = 1
     if ";" in movedata['images']:
         for ur in movedata['images'].split(";"):
             url = ur.replace(' ', '_')
@@ -122,16 +128,19 @@ def get_move_img_from_data(movedata):
             images = soup.find_all("img")
 
             for img in images:
-                print(img)
                 if not "logo" in img["src"] and not "svg" in img["src"]:
                     url = "https://www.dustloop.com" + img["src"]
                     break
 
-            print("--->", url)
             response = requests.get(url)
             
             img = Image.open(BytesIO(response.content))
-            img.show()
+            if index is not None:
+                img.save(f"assets/downloaded_data/{chara}_{move[:-3].replace("/","")}({i}).png")
+                i+=1
+            else:
+                img.save(f"assets/downloaded_data/{chara}_{move.replace("/","")}.png")
+                return
 
     else:
         url = movedata['images'].replace(' ', '_')
@@ -140,16 +149,14 @@ def get_move_img_from_data(movedata):
         images = soup.find_all("img")
 
         for img in images:
-            print(img)
             if not "logo" in img["src"] and not "svg" in img["src"]:
                 url = "https://www.dustloop.com" + img["src"]
                 break
 
-        print("--->", url)
         response = requests.get(url)
         
         img = Image.open(BytesIO(response.content))
-        img.show()
+        img.save(f"assets/downloaded_data/{chara}_{move.replace("/","")}.png")
 
 def is_gatling(A, B):
     if A not in normals or B not in normals:
@@ -163,67 +170,62 @@ def is_gatling(A, B):
     if "S" in A and ("H" in B):
         return True
     
-def calc_gap(chara, notation):
-    moveA, moveB = notation.split(">")
-    moveA = moveA.strip()
-    moveB = moveB.strip()
+# def calc_gap(chara, notation):
+#     moveA, moveB = notation.split(">")
+#     moveA = moveA.strip()
+#     moveB = moveB.strip()
 
-    moveAdata = get_move_data(chara, moveA)
-    moveBdata = get_move_data(chara, moveB)
+#     moveAdata = get_move_data(chara, moveA)
+#     moveBdata = get_move_data(chara, moveB)
 
-    moveAreco = 0
-    moveAob = 0
-    moveAac = 0
-    moveBstartup = 0
+#     moveAreco = 0
+#     moveAob = 0
+#     moveAac = 0
+#     moveBstartup = 0
 
-    if "," in moveAdata["recovery"]:
-        moveAreco = moveAdata["recovery"].split(",")[0]
-    else:
-        moveAreco = moveAdata["recovery"]
+#     if "," in moveAdata["recovery"]:
+#         moveAreco = moveAdata["recovery"].split(",")[0]
+#     else:
+#         moveAreco = moveAdata["recovery"]
 
-    if "," in moveAdata["active"]:
-        moveAac = moveAdata["active"].split(",")[0]
-    else:
-        moveAac = moveAdata["active"]
+#     if "," in moveAdata["active"]:
+#         moveAac = moveAdata["active"].split(",")[0]
+#     else:
+#         moveAac = moveAdata["active"]
 
-    if "," in moveAdata["onBlock"]:
-        moveAob = moveAdata["onBlock"].split(",")[0]
-    else:
-        moveAob = moveAdata["onBlock"]
+#     if "," in moveAdata["onBlock"]:
+#         moveAob = moveAdata["onBlock"].split(",")[0]
+#     else:
+#         moveAob = moveAdata["onBlock"]
 
-    if "," in moveBdata["startup"]:
-        moveBstartup = moveBdata["startup"].split(",")[0]
-    else:
-        moveBstartup = moveBdata["startup"]
+#     if "," in moveBdata["startup"]:
+#         moveBstartup = moveBdata["startup"].split(",")[0]
+#     else:
+#         moveBstartup = moveBdata["startup"]
     
-    moveAreco = int(moveAreco)
-    moveAob = int(moveAob)
-    moveAac = int(moveAac)
-    moveBstartup = int(moveBstartup)    
-    print(f" Move A recovery: {moveAreco}\n \
-Move A cancels: {moveAdata["cancel"]}\n\
-Move A on block: {moveAob}\n \
-Move A active frames: {moveAac}\n \
-Move B startup: {moveBstartup}")
-    # ============================================================ LINK
-    if not is_gatling(moveA, moveB):
-        print(f"{moveA} > {moveB} est un link.")
-        gap = abs(moveAob) + moveBstartup
-        print(f"Le gap entre le {moveA} et le {moveB} de {chara} est {gap}f.")
-    # ============================================================ GATLING
-    if is_gatling(moveA, moveB):
-        print(f"{moveA} > {moveB} est une gatling.")
-        cancelWindow = moveAreco + moveAac - 1
-        if moveBstartup < cancelWindow : 
-            print(f"{moveA} > {moveB} de {chara} est gapless.")
-        else:
-            gap = 
-    # ============================================================ SPECIAL CANCEL
-
-
-if __name__ == '__main__':
-    chara = get_chara_from_str(sys.argv[1])
-    calc_gap(chara, f"{sys.argv[2]}>{sys.argv[3]}")
+#     moveAreco = int(moveAreco)
+#     moveAob = int(moveAob)
+#     moveAac = int(moveAac)
+#     moveBstartup = int(moveBstartup)    
+#     print(f" Move A recovery: {moveAreco}\n \
+# Move A cancels: {moveAdata["cancel"]}\n\
+# Move A on block: {moveAob}\n \
+# Move A active frames: {moveAac}\n \
+# Move B startup: {moveBstartup}")
+#     # ============================================================ LINK
+#     if not is_gatling(moveA, moveB):
+#         print(f"{moveA} > {moveB} est un link.")
+#         gap = abs(moveAob) + moveBstartup
+#         print(f"Le gap entre le {moveA} et le {moveB} de {chara} est {gap}f.")
+#     # ============================================================ GATLING
+#     if is_gatling(moveA, moveB):
+#         print(f"{moveA} > {moveB} est une gatling.")
+#         cancelWindow = moveAreco + moveAac - 1
+#         if moveBstartup < cancelWindow : 
+#             print(f"{moveA} > {moveB} de {chara} est gapless.")
+#         else:
+#             gap = 
+#     # ============================================================ SPECIAL CANCEL
 
 
 
@@ -233,3 +235,7 @@ if __name__ == '__main__':
     #query = input()
     #md = get_move_data(*get_infos_from_query(query))
     #get_move_img_from_data(md)
+
+if __name__=="__main__":
+    md = get_move_data("Slayer", "214P/K~H")
+    get_move_img_from_data("Slayer", *md)
