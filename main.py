@@ -78,7 +78,7 @@ class NoteTab:
     def __init__(self, notebook, title="Nouvelle feuille"):
         self.frame = ttk.Frame(notebook)
 
-        self.fontsize = 18
+        self.fontsize = 12
         self.iconsize = 48
         self.ingamesize = 32
         self.dlsize = 48
@@ -125,6 +125,10 @@ class NoteTab:
                 data = f.readlines()
                 self.fgcolor = data[0].strip()
                 self.bgcolor = data[1].strip()
+                self.fontsize = int(data[2].strip())
+                self.iconsize = int(data[3].strip())
+                self.ingamesize = int(data[4].strip())
+                self.dlsize = int(data[5].strip())
 
     def on_key_release(self, event):
         self.replace_tags()
@@ -288,13 +292,76 @@ class NoteTab:
             window=self.img_label
         )
 
+class SheetTab:
+    
+    def __init__(self, parent, rows, columns):
+        self.window = tk.Toplevel(parent)
+        self.window.transient(parent)
+        self.window.grab_set()
+
+        self.fontsize = 12
+        self.iconsize = 48
+        self.ingamesize = 32
+        self.dlsize = 48
+
+        self.bgcolor = "#f7f7f7"
+        self.bgcolor = "#1e1e1e"
+
+        self.pseudo = None
+        self.perso = None
+        self.perso_img = None
+
+        self.get_data()
+
+        self.window.title("Table")
+        #self.window.geometry("400x500")
+        self.window.configure(bg=self.bgcolor)
+
+        self.build_ui(rows, columns)
+
+    def build_ui(self, rows, columns):
+        for i in range(rows):
+            for j in range(columns):
+                
+                self.e = tk.Entry(self.window, width=20, fg=self.fgcolor, bg=self.bgcolor,
+                               font=('Arial',self.fontsize,'bold'))
+                
+                self.e.grid(row=i, column=j)
+                self.e.insert(tk.END, "")
+
+    def get_data(self):
+        if os.path.exists("data/profile.data"):
+            with open("data/profile.data", "rb") as f:
+                data = f.readlines()
+                if len(data)<2:
+                    self.pseudo = data
+                else:
+                    self.pseudo = data[0].decode().strip()
+                    self.perso = data[1].decode().strip()
+                exte = ".jpg"
+                if not self.perso:
+                    self.perso = "default"
+                    exte = ".png"
+                self.perso_img = f"assets/icons/{self.perso}{exte}"
+
+        if os.path.exists("data/theme.data"):
+            with open("data/theme.data", "rb") as f:
+                data = f.readlines()
+                self.fgcolor = data[0].strip()
+                self.bgcolor = data[1].strip()
+                self.fontsize = int(data[2].strip())
+                self.iconsize = int(data[3].strip())
+                self.ingamesize = int(data[4].strip())
+                self.dlsize = int(data[5].strip())
+
+
 class ProfileWindow:
     def __init__(self, parent):
         self.window = tk.Toplevel(parent)
         self.window.transient(parent)
         self.window.grab_set()
 
-        self.fontsize = 18
+        self.fontsize = 12
         self.iconsize = 48
         self.ingamesize = 32
         self.dlsize = 48
@@ -311,13 +378,9 @@ class ProfileWindow:
 
         self.opt = tk.StringVar(value="")
 
-        
-
         self.pseudo = None
         self.perso = None
         self.perso_img = None
-        
-
         
         self.build_ui()
 
@@ -341,6 +404,10 @@ class ProfileWindow:
                 data = f.readlines()
                 self.fgcolor = data[0].strip()
                 self.bgcolor = data[1].strip()
+                self.fontsize = int(data[2].strip())
+                self.iconsize = int(data[3].strip())
+                self.ingamesize = int(data[4].strip())
+                self.dlsize = int(data[5].strip())
 
     def build_ui(self):
 
@@ -432,7 +499,7 @@ class CustomizationWindow:
         self.window.transient(parent)
         self.window.grab_set()
 
-        self.fontsize = 18
+        self.fontsize = 12
         self.iconsize = 48
         self.ingamesize = 32
         self.dlsize = 48
@@ -443,7 +510,7 @@ class CustomizationWindow:
         self.get_data()
 
         self.window.title("Customisation")
-        self.window.geometry("400x500")
+        self.window.geometry("400x600")
         self.window.configure(bg=self.bgcolor)
 
         self.build_ui()
@@ -454,6 +521,10 @@ class CustomizationWindow:
                 data = f.readlines()
                 self.fgcolor = data[0].strip()
                 self.bgcolor = data[1].strip()
+                self.fontsize = int(data[2].strip())
+                self.iconsize = int(data[3].strip())
+                self.ingamesize = int(data[4].strip())
+                self.dlsize = int(data[5].strip())
                 
 
 
@@ -462,8 +533,8 @@ class CustomizationWindow:
         # ===== TITRE =====
         title = tk.Label(
             self.window,
-            text="Profil",
-            font=("Segoe UI", self.fontsize, "bold"),
+            text="Thème",
+            font=("Segoe UI", 16, "bold"),
             bg=self.bgcolor,
             fg=self.fgcolor
         )
@@ -479,7 +550,7 @@ class CustomizationWindow:
 
         self.fg_entry = tk.Entry(
             self.window,
-            font=("Segoe UI", self.fontsize),
+            font=("Segoe UI", 16),
             textvariable=tk.StringVar(self.window, self.fgcolor)
         )
         self.fg_entry.pack(fill="x", padx=30, pady=10)
@@ -494,10 +565,78 @@ class CustomizationWindow:
 
         self.bg_entry = tk.Entry(
             self.window,
-            font=("Segoe UI", self.fontsize),
+            font=("Segoe UI", 16),
             textvariable=tk.StringVar(self.window, self.bgcolor)
         )
         self.bg_entry.pack(fill="x", padx=30, pady=10)
+
+        fontsize_label = tk.Label(
+            self.window,
+            text="Taille du texte (Défaut: 12):",
+            bg=self.bgcolor,
+            fg=self.fgcolor
+        )
+        fontsize_label.pack(fill="x", anchor="w", padx=30)
+
+        self.fontsize_entry = tk.Spinbox(
+            self.window,
+            from_=8,
+            to=48,
+            font=("Segoe UI", 16),
+            textvariable=tk.StringVar(self.window, self.fontsize)
+        )
+        self.fontsize_entry.pack(fill="x", padx=30, pady=10)
+
+        iconsize_label = tk.Label(
+            self.window,
+            text="Taille des icônes de persos (Défaut: 48):",
+            bg=self.bgcolor,
+            fg=self.fgcolor
+        )
+        iconsize_label.pack(fill="x", anchor="w", padx=30)
+
+        self.iconsize_entry = tk.Spinbox(
+            self.window,
+            from_=8,
+            to=128,
+            font=("Segoe UI", 16),
+            textvariable=tk.StringVar(self.window, self.iconsize)
+        )
+        self.iconsize_entry.pack(fill="x", padx=30, pady=10)
+
+        ingamesize_label = tk.Label(
+            self.window,
+            text="Taille des icônes de boutons (Défaut: 32):",
+            bg=self.bgcolor,
+            fg=self.fgcolor
+        )
+        ingamesize_label.pack(fill="x", anchor="w", padx=30)
+
+        self.ingamesize_entry = tk.Spinbox(
+            self.window,
+            from_=8,
+            to=128,
+            font=("Segoe UI", 16),
+            textvariable=tk.StringVar(self.window, self.ingamesize)
+        )
+        self.ingamesize_entry.pack(fill="x", padx=30, pady=10)
+
+        dlsize_label = tk.Label(
+            self.window,
+            text="Taille des icônes de moves (Défaut: 48):",
+            bg=self.bgcolor,
+            fg=self.fgcolor
+        )
+        dlsize_label.pack(fill="x", anchor="w", padx=30)
+
+        self.dlsize_entry = tk.Spinbox(
+            self.window,
+            from_=8,
+            to=128,
+            font=("Segoe UI", 16),
+            textvariable=tk.StringVar(self.window, self.dlsize)
+        )
+        self.dlsize_entry.pack(fill="x", padx=30, pady=10)
 
         save_btn = ttk.Button(
             self.window,
@@ -510,9 +649,13 @@ class CustomizationWindow:
 
         self.fgcolor = self.fg_entry.get()
         self.bgcolor = self.bg_entry.get()
+        self.fontsize = self.fontsize_entry.get()
+        self.iconsize = self.iconsize_entry.get()
+        self.ingamesize = self.ingamesize_entry.get()
+        self.dlsize = self.dlsize_entry.get()
 
         with open("data/theme.data","wb") as f:
-            f.write(f"{self.fgcolor}\n{self.bgcolor}".encode())
+            f.write(f"{self.fgcolor}\n{self.bgcolor}\n{self.fontsize}\n{self.iconsize}\n{self.ingamesize}\n{self.dlsize}".encode())
             f.close()        
 
         messagebox.showinfo(
@@ -529,7 +672,7 @@ class SelectChara:
         self.window.transient(parent)
         self.window.grab_set()
 
-        self.fontsize = 18
+        self.fontsize = 12
         self.iconsize = 48
         self.ingamesize = 32
         self.dlsize = 48
@@ -560,18 +703,12 @@ class SelectChara:
                 data = f.readlines()
                 self.fgcolor = data[0].strip()
                 self.bgcolor = data[1].strip()
+                self.fontsize = int(data[2].strip())
+                self.iconsize = int(data[3].strip())
+                self.ingamesize = int(data[4].strip())
+                self.dlsize = int(data[5].strip())
 
     def build_ui(self):
-
-        # title = tk.Label(
-        #     self.window,
-        #     text="Counterplay contre qui?",
-        #     font=("Segoe UI", 18, "bold"),
-        #     bg="#1e1e1e",
-        #     fg="white"
-        # )
-        # title.grid(column=0, row=0)
-
         i=0
         j=0
         for file in os.listdir("assets/icons"):
@@ -606,7 +743,7 @@ class NotesApp:
         self.root.title("Chrysanthème")
         self.root.geometry("1100x700")
 
-        self.fontsize = 18
+        self.fontsize = 12
         self.iconsize = 48
         self.ingamesize = 32
         self.dlsize = 48
@@ -659,6 +796,10 @@ class NotesApp:
                 data = f.readlines()
                 self.fgcolor = data[0].strip()
                 self.bgcolor = data[1].strip()
+                self.fontsize = int(data[2].strip())
+                self.iconsize = int(data[3].strip())
+                self.ingamesize = int(data[4].strip())
+                self.dlsize = int(data[5].strip())
 
     def setup_style(self):
         style = ttk.Style()
@@ -694,6 +835,8 @@ class NotesApp:
             foreground="white",
             padding=6,
         )
+
+        self.root.option_add('*tearOff', False)
 
     def create_toolbar(self):
         self.toolbar = ttk.Frame(self.root, style="Toolbar.TFrame")
@@ -792,7 +935,6 @@ class NotesApp:
 
 
     def new_counterplay(self):
-
         sel = SelectChara(self.root, (self.pseudo, self.perso, self.perso_img))
         self.root.wait_window(sel.window)
         char = sel.adversaire
@@ -815,7 +957,11 @@ class NotesApp:
             messagebox.showerror("Erreur", str(e))
 
     def new_roundstart(self):
-        pass
+        sel = SelectChara(self.root, (self.pseudo, self.perso, self.perso_img))
+        self.root.wait_window(sel.window)
+        char = sel.adversaire
+        path = Path(f"profiles/{self.pseudo}/{self.perso}/roundstart/{char}.pipi")
+        sh = SheetTab(self.root, 5, 5)
 
     def close_tab_on_double_click(self):
         if len(self.tabs) == 1:
