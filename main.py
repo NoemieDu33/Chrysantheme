@@ -8,6 +8,7 @@ from datetime import datetime
 
 from fetchdata import get_chara_from_str, get_move_data, get_move_img_from_data
 
+
 putain_de_bt = {
     "624" : "63214",
     "426" : "41236",
@@ -70,7 +71,7 @@ for c in charas:
 for i in range(1,10):
     table_corres[f"{i}"] = f"ingame/{i}.png"
 
-for k in ["P", "K", "S", "H", "D"]:
+for k in ["P", "K", "S", "H", "D", "FD", "RC"]:
     table_corres[k] = f"ingame/{k}.png"
 
 for bt in putain_de_bt.keys():
@@ -79,6 +80,9 @@ for bt in putain_de_bt.keys():
 class NoteTab:
     def __init__(self, notebook, title="Nouvelle feuille"):
         self.frame = ttk.Frame(notebook)
+
+        self.img_checked = ImageTk.PhotoImage(file="assets/misc/checked.png")
+        self.img_unchecked = ImageTk.PhotoImage(file="assets/misc/unchecked.png")
 
         self.fontsize = 12
         self.iconsize = 48
@@ -133,7 +137,8 @@ class NoteTab:
 
     def on_key_release(self, event):
         self.replace_tags()
-        self.replace_custom_tags()
+        self.replace_chara_tags()
+        self.replace_markdown_tags()
 
 
     def replace_tags(self):
@@ -209,7 +214,7 @@ class NoteTab:
 
                 return "break"
 
-    def replace_custom_tags(self):
+    def replace_chara_tags(self):
         pattern = r"<[^=]+=[^>]+>"
         start = "1.0"
 
@@ -264,6 +269,77 @@ class NoteTab:
                 self.text.image_create(pos, image=tk_img)
 
             start = end
+
+    def toggle_cb(self, event, lbl):
+        is_checked = self.cbs[lbl]
+        if is_checked:
+            lbl.config(image=self.img_unchecked)
+            is_checked = False
+        else:
+            lbl.config(image=self.img_checked)
+            is_checked = True
+        self.cbs[lbl] = is_checked
+        print(self.cbs[lbl])
+
+
+    def replace_markdown_tags(self):
+        pattern = r"\[CB\]"
+        start = "1.0"
+
+        if not hasattr(self, "cb_counter"):
+            self.cb_counter = 0
+        if not hasattr(self, "cbs"):
+            self.cbs = dict()
+
+        while True:
+            # Recherche du pattern avec RegEx
+            pos = self.text.search(pattern, start, stopindex="end", regexp=True)
+
+            if not pos:
+                break  # Plus de balises trouvées, on arrête
+            
+            # Le texte recherché fait exactement 4 caractères : "[CB]"
+            tag_length = 4
+            end = f"{pos}+{tag_length}c"
+
+            # Vérification si la balise a déjà été traitée
+            existing_tags = self.text.tag_names(pos)
+            already_done = any(t.startswith("hidden_") for t in existing_tags)
+
+            if not already_done:
+                cb_label = tk.Label(self.text, image=self.img_unchecked, bg=self.bgcolor, cursor="hand2")
+                
+                is_checked = False
+                self.cbs[cb_label] = is_checked
+
+
+                cb_label.bind("<Button-1>", lambda event, lbl=cb_label: self.toggle_cb(event, lbl))
+
+                # Stockage si tu as besoin de l'état global plus tard
+                
+
+                tag_name = f"hidden_{self.cb_counter}"
+                self.cb_counter += 1
+                
+                self.text.tag_add(tag_name, pos, end)
+                self.text.tag_config(tag_name, elide=True)
+
+                # Insertion du Label customisé à la place du texte
+                self.text.window_create(pos, window=cb_label)
+
+            # On avance le curseur de recherche APRÈS le tag actuel pour éviter la boucle infinie
+            start = end
+            
+    def check_boxes(self):
+        print(self.cbs)
+        if not self.cbs or len(self.cbs)<1:
+            return
+        for k,v in self.cbs.items():
+            if v:
+                k.config(image=self.img_checked)
+            else:
+                k.config(image=self.img_unchecked)
+
 
 class SheetTab:
     def __init__(self, notebook, title="Nouvelle table", rows=8, columns=8, chara_1=None, chara_2=None):
@@ -532,7 +608,7 @@ class ProfileWindow:
             os.makedirs(f"profiles/{self.pseudo}/{self.perso}")
             os.makedirs(f"profiles/{self.pseudo}/{self.perso}/roundstart")
             os.makedirs(f"profiles/{self.pseudo}/{self.perso}/counterplay")
-            os.makedirs(f"profiles/{self.pseudo}/{self.perso}/charas")
+            os.makedirs(f"profiles/{self.pseudo}/{self.perso}/uniques")
             os.makedirs(f"profiles/{self.pseudo}/{self.perso}/random")
         with open("data/profile.data","wb") as f:
             f.write(f"{self.pseudo}\n{self.perso}".encode())
@@ -889,6 +965,7 @@ class NotesApp:
             (None, "➕ Note basique", self.new_tab),
             (None, "🚩 Note de counterplay", self.new_counterplay),
             (None, "🚥 Table de roundstart", self.new_roundstart),
+            (None, "🏅 Objectifs", self.show_goals),
         ]
 
         for widget in self.toolbar.winfo_children():
@@ -941,6 +1018,49 @@ class NotesApp:
             style="Toolbar.TButton",
         )
         self.settings_btn.pack(side="left", padx=6, pady=6)
+
+    def show_goals(self):
+        if self.pseudo is not None:
+            filepath = f"profiles/{self.pseudo}/{self.perso}/uniques/objectifs.caca"
+            if not os.path.exists(filepath):
+                with open(filepath, "w") as f:
+                    f.write(f"Objectifs pour {self.pseudo} <{self.perso}=c.S>\n")
+                    f.close()
+            path = Path(filepath)
+
+            content = path.read_text(encoding="utf-8")
+            cbsglob = None
+            print(content)
+            if "!-/" in content:
+                cbsglob = content.split("!-/")[1][:-3]
+                content = content.split("!-/")[0]
+                print(cbsglob)
+                print(content)
+
+            i=0
+            tab = NoteTab(self.notebook, path.name)
+            self.tabs.append(tab)
+            self.notebook.add(tab.frame, text=path.name)
+            tab.text.insert("1.0", content)
+            tab.replace_tags()
+            tab.replace_chara_tags()
+            tab.replace_markdown_tags()
+            if cbsglob is not None and len(cbsglob):
+                i=0
+                for k,v in tab.cbs.items():
+                    tab.cbs[k] = int(cbsglob[i])
+                    i+=1
+
+            self.notebook.select(tab.frame)
+            tab.filepath = path
+            self.status.set(f"Ouvert : {path.name}")
+            tab.check_boxes()
+
+
+        else:
+            messagebox.showerror("Erreur", "Tu n'as pas setup de profil!")   
+            return
+
 
     def show_file_menu(self):
         x = self.file_btn.winfo_rootx()
@@ -1064,7 +1184,8 @@ class NotesApp:
             tab.text.insert("1.0", content)
             tab.filepath = path
             tab.replace_tags()
-            tab.replace_custom_tags()
+            tab.replace_chara_tags()
+            tab.replace_markdown_tags()
 
             self.status.set(f"Ouvert : {path.name}")
 
@@ -1117,9 +1238,10 @@ class NotesApp:
 
     def save_file(self):
         tab = self.get_current_tab()
+        is_sheet = isinstance(tab, SheetTab)
 
         if not tab.filepath:
-            is_sheet = isinstance(tab, SheetTab)
+
             default_ext = ".pipi" if is_sheet else ".caca"
             file_types = [("Fichier Roundstart", "*.pipi")] if is_sheet else [("Fichier note", "*.caca")]
             file_types.extend([("Fichier texte", "*.txt"), ("Tous les fichiers", "*.*")])
@@ -1135,7 +1257,7 @@ class NotesApp:
 
             tab.filepath = Path(filepath)
 
-        if isinstance(tab, SheetTab):
+        if is_sheet:
             c = tab.get_content()
             content = ""
             for l in c:
@@ -1143,9 +1265,21 @@ class NotesApp:
 
             
         else:
+            tab.replace_tags()
+            tab.replace_chara_tags()
+            tab.replace_markdown_tags()
             content = tab.text.get("1.0", "end-1c")
+            if tab.cbs is not None and len(tab.cbs)>0:
+                content += "\n!-/"
+                for cb, state in tab.cbs.items():
+                    content += "1" if state else "0"
+                content += "/-!"
+
+                print("saved:\n", content,"\n----\n", tab.cbs)
+                    
 
         try:
+            
             tab.filepath.write_text(content, encoding="utf-8")
 
             filename = tab.filepath.name
@@ -1182,16 +1316,29 @@ class NotesApp:
                 self.notebook.add(tab.frame, text=path.name)
                 tab.set_content(content)
             else:
+                cbsglob = None
+                print(content)
+                if "!-/" in content:
+                    cbsglob = content.split("!-/")[1][:-3].split("")
+                    content = content.split("!-/")[0]
+
                 tab = NoteTab(self.notebook, path.name)
                 self.tabs.append(tab)
                 self.notebook.add(tab.frame, text=path.name)
                 tab.text.insert("1.0", content)
                 tab.replace_tags()
-                tab.replace_custom_tags()
+                tab.replace_chara_tags()
+                tab.replace_markdown_tags()
+                if cbsglob is not None and len(cbsglob):
+                    i=0
+                    for k,v in tab.cbs.items():
+                        tab.cbs[k] = int(cbsglob[i])
+                        i+=1
 
             self.notebook.select(tab.frame)
             tab.filepath = path
             self.status.set(f"Ouvert : {path.name}")
+            tab.check_boxes()
 
         except Exception as e:
             messagebox.showerror("Erreur", str(e))
