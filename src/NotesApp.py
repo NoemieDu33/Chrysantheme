@@ -6,11 +6,11 @@ import os, re
 import shutil, zipfile
 from datetime import datetime
 
-from NoteTab import NoteTab
-from ProfileWindow import ProfileWindow
-from SelectChara import SelectChara
-from SheetTab import SheetTab
-from CustomizationWindow import CustomizationWindow
+from src.NoteTab import NoteTab
+from src.ProfileWindow import ProfileWindow
+from src.SelectChara import SelectChara
+from src.SheetTab import SheetTab
+from src.CustomizationWindow import CustomizationWindow
 
 class NotesApp:
     def __init__(self, root):
@@ -196,12 +196,9 @@ class NotesApp:
 
             content = path.read_text(encoding="utf-8")
             cbsglob = None
-            print(content)
             if "!-/" in content:
                 cbsglob = content.split("!-/")[1][:-3]
                 content = content.split("!-/")[0]
-                print(cbsglob)
-                print(content)
 
             i=0
             tab = NoteTab(self.notebook, path.name)
@@ -440,8 +437,6 @@ class NotesApp:
                 for cb, state in tab.cbs.items():
                     content += "1" if state else "0"
                 content += "/-!"
-
-                print("saved:\n", content,"\n----\n", tab.cbs)
                     
 
         try:
@@ -483,7 +478,6 @@ class NotesApp:
                 tab.set_content(content)
             else:
                 cbsglob = None
-                print(content)
                 if "!-/" in content:
                     cbsglob = content.split("!-/")[1][:-3].split("")
                     content = content.split("!-/")[0]

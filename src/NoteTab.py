@@ -6,6 +6,78 @@ import os, re
 import shutil, zipfile
 from datetime import datetime
 
+from src.fetchdata import get_chara_from_str, get_move_data, get_move_img_from_data
+
+charas = [
+    " ",
+    "ABA", 
+    "Anji",
+    "Asuka",
+    "Axl",
+    "Baiken",
+    "Bedman",
+    "Bridget",
+    "Chaos",
+    "Chipp",
+    "Dizzy",
+    "Elphelt",
+    "Faust",
+    "Giovanna",
+    "Goldlewis",
+    "I-No",
+    "Jack-O'",
+    "Jam",
+    "Johnny",
+    "Ky",
+    "Lucy",
+    "May",
+    "Millia",
+    "Nagoriyuki",
+    "Potemkin",
+    "Ramlethal",
+    "Sin",
+    "Slayer",
+    "Sol",
+    "Testament",
+    "Unika",
+    "Venom",
+    "Zato"
+]
+
+putain_de_bt = {
+    "624" : "63214",
+    "426" : "41236",
+    "684" : "69874",
+    "486" : "47896",
+    "248" : "21478",
+    "842" : "87412",
+    "268" : "23698",
+    "862" : "89632",
+}
+
+table_corres = {
+    "Asya" : "icons/default.png",
+    "236" : "ingame/236.png",
+    "214" : "ingame/214.png",
+    "623" : "ingame/623.png",
+    "421" : "ingame/421.png",
+}
+
+for c in charas:
+    if c.strip():
+        table_corres[c] = f"icons/{c}.jpg"
+
+for i in range(1,10):
+    table_corres[f"{i}"] = f"ingame/{i}.png"
+
+for k in ["P", "K", "S", "H", "D", "FD", "RC"]:
+    table_corres[k] = f"ingame/{k}.png"
+
+for bt in putain_de_bt.keys():
+    table_corres[bt] = f"ingame/{bt}.png"
+
+
+
 class NoteTab:
     def __init__(self, notebook, title="Nouvelle feuille"):
         self.frame = ttk.Frame(notebook)
@@ -208,7 +280,6 @@ class NoteTab:
             lbl.config(image=self.img_checked)
             is_checked = True
         self.cbs[lbl] = is_checked
-        print(self.cbs[lbl])
 
 
     def replace_markdown_tags(self):
@@ -221,17 +292,14 @@ class NoteTab:
             self.cbs = dict()
 
         while True:
-            # Recherche du pattern avec RegEx
             pos = self.text.search(pattern, start, stopindex="end", regexp=True)
 
             if not pos:
-                break  # Plus de balises trouvées, on arrête
+                break
             
-            # Le texte recherché fait exactement 4 caractères : "[CB]"
             tag_length = 4
             end = f"{pos}+{tag_length}c"
 
-            # Vérification si la balise a déjà été traitée
             existing_tags = self.text.tag_names(pos)
             already_done = any(t.startswith("hidden_") for t in existing_tags)
 
@@ -244,7 +312,6 @@ class NoteTab:
 
                 cb_label.bind("<Button-1>", lambda event, lbl=cb_label: self.toggle_cb(event, lbl))
 
-                # Stockage si tu as besoin de l'état global plus tard
                 
 
                 tag_name = f"hidden_{self.cb_counter}"
@@ -253,14 +320,11 @@ class NoteTab:
                 self.text.tag_add(tag_name, pos, end)
                 self.text.tag_config(tag_name, elide=True)
 
-                # Insertion du Label customisé à la place du texte
                 self.text.window_create(pos, window=cb_label)
 
-            # On avance le curseur de recherche APRÈS le tag actuel pour éviter la boucle infinie
             start = end
             
     def check_boxes(self):
-        print(self.cbs)
         if not self.cbs or len(self.cbs)<1:
             return
         for k,v in self.cbs.items():

@@ -108,8 +108,8 @@ def get_move_data(character, move):
     
     character = get_chara_from_str(character)
     if character=="Nagoriyuki" and move in ["f.S", "c.S", "2S", "2H", "5H", "6H", "f.SS", "f.SSS"]:
-        lvl = input("Indiquer le niveau de Blood Rage (1/2/3/BR) : ")
-        move = move + f" Level {lvl.strip()}"
+        lvl = 1
+        move = move + f" Level {lvl}"
     if " " in character:
         character.replace(" ", "_")
     url = f"https://www.dustloop.com/wiki/api.php?action=cargoquery&tables=MoveData_GGST&fields=chara,input,name,damage,guard,startup,active,recovery,onBlock,onHit,invuln,cancel,images,hitboxes,type&format=json&formatversion=2&where=chara%20in%20('{character}')"

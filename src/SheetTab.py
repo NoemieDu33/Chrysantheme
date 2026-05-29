@@ -141,10 +141,8 @@ class SheetTab:
 
     def set_content(self, content_str):
         content = content_str.split("\n")
-        print(content)
         for k in range(len(content)):
             content[k] = content[k].split("|")
-        print(content)
         for i in range(self.rows):
             for j in range(self.columns):
                 if i!=0 or j!=0:

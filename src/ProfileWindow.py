@@ -6,6 +6,43 @@ import os, re
 import shutil, zipfile
 from datetime import datetime
 
+
+charas = [
+    " ",
+    "ABA", 
+    "Anji",
+    "Asuka",
+    "Axl",
+    "Baiken",
+    "Bedman",
+    "Bridget",
+    "Chaos",
+    "Chipp",
+    "Dizzy",
+    "Elphelt",
+    "Faust",
+    "Giovanna",
+    "Goldlewis",
+    "I-No",
+    "Jack-O'",
+    "Jam",
+    "Johnny",
+    "Ky",
+    "Lucy",
+    "May",
+    "Millia",
+    "Nagoriyuki",
+    "Potemkin",
+    "Ramlethal",
+    "Sin",
+    "Slayer",
+    "Sol",
+    "Testament",
+    "Unika",
+    "Venom",
+    "Zato"
+]
+
 class ProfileWindow:
     def __init__(self, parent):
         self.window = tk.Toplevel(parent)
@@ -17,7 +54,7 @@ class ProfileWindow:
         self.ingamesize = 32
         self.dlsize = 48
 
-        self.bgcolor = "#f7f7f7"
+        self.fgcolor = "#f7f7f7"
         self.bgcolor = "#1e1e1e"
 
         self.pseudo = None
