@@ -17,7 +17,7 @@ class CustomizationWindow:
         self.ingamesize = 32
         self.dlsize = 48
 
-        self.bgcolor = "#f7f7f7"
+        self.fgcolor = "#f7f7f7"
         self.bgcolor = "#1e1e1e"
 
         self.get_data()

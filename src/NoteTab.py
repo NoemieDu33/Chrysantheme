@@ -30,6 +30,7 @@ charas = [
     "Johnny",
     "Ky",
     "Lucy",
+    "Leo",
     "May",
     "Millia",
     "Nagoriyuki",

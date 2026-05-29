@@ -229,14 +229,12 @@ class NotesApp:
         x = self.file_btn.winfo_rootx()
         y = self.file_btn.winfo_rooty() + self.file_btn.winfo_height()
         self.file_menu.post(x, y)
-        self.file_menu.grab_set()
         self.root.bind("<Button-1>", self.close_file_menu, add="+")
 
     def show_settings_menu(self):
         x = self.settings_btn.winfo_rootx()
         y = self.settings_btn.winfo_rooty() + self.settings_btn.winfo_height()
         self.settings_menu.post(x, y)
-        self.settings_menu.grab_set()
         self.root.bind("<Button-1>", self.close_settings_menu, add="+")
 
     def close_file_menu(self, event=None):
@@ -271,7 +269,7 @@ class NotesApp:
         )
 
     def export_data(self):
-        shutil.make_archive(base_name=f"export/{self.pseudo}_{str(datetime.now())[:19]}", 
+        shutil.make_archive(base_name=f"export/{self.pseudo}_{str(datetime.now())[:19].replace(" ","_").replace(":","_")}", 
                             format='zip', 
                             root_dir=".",
                             base_dir=f"profiles/{self.pseudo}/",
@@ -448,8 +446,10 @@ class NotesApp:
             self.notebook.tab(current, text=filename)
 
             self.status.set(f"Sauvegardé : {filename}")
+            print("save fini")
 
         except Exception as e:
+            print("err")
             messagebox.showerror("Erreur", str(e))
 
     def open_file(self):
@@ -514,14 +514,11 @@ class NotesApp:
         CustomizationWindow(self.root)
 
     def update_status(self, event=None):
-        try:
-            tab = self.get_current_tab()
-            title = self.notebook.tab("current", "text")
-            
-            if isinstance(tab, SheetTab):
-                self.status.set(f"Table active : {title} | Grille {tab.rows}x{tab.columns}")
-            else:
-                chars = len(tab.text.get("1.0", "end-1c"))
-                self.status.set(f"Feuille active : {title} | {chars} caractères")
-        except:
-            pass
+        tab = self.get_current_tab()
+        title = self.notebook.tab("current", "text")
+        
+        if isinstance(tab, SheetTab):
+            self.status.set(f"Table active : {title} | Grille {tab.rows}x{tab.columns}")
+        else:
+            chars = len(tab.text.get("1.0", "end-1c"))
+            self.status.set(f"Feuille active : {title} | {chars} caractères")
